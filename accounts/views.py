@@ -9,6 +9,10 @@ from django.views.decorators.cache import never_cache
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.http import urlsafe_base64_encode,urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_text
+from django.contrib.auth.base_user import BaseUserManager
 
 from django_otp.decorators import otp_required
 from two_factor.views import OTPRequiredMixin
@@ -17,12 +21,16 @@ from two_factor.views.utils import class_view_decorator
 from accounts.forms import SignupForm,LoginForm,ProfileForm
 from accounts.models import User
 
-def send_user_email(recipients='starfordomwakwe@gmail.com'):
+def send_user_email(email_link,recipients='starfordomwakwe@gmail.com'):
     subject = 'Account activation email'
-    message = ' click on the following link to activate your two factor account '
+    message = ' click on the following link to activate your two factor account '+ email_link
     email_from = settings.EMAIL_HOST_USER
     recipient_list = [recipients,]
     send_mail( subject, message, email_from, recipient_list )
+
+class TokenGenerator(PasswordResetTokenGenerator):
+    def _make_hash_value(self, user, timestamp):
+        return ( str(user.pk) + str(timestamp) + str(user.is_active))
 
 class Home(CreateView):
     template_name = "accounts/index.html"
@@ -32,10 +40,10 @@ class Home(CreateView):
 
 
     def get(self, request, *args, **kwargs):
-        try:
-            send_user_email()
-        except Exception as e:
-            print("Error sending email, check the email settings are correct")
+        # try:
+        #     send_user_email()
+        # except Exception as e:
+        #     print("Error sending email, check the email settings are correct")
         
         users = User.objects.all()
         for user in users:
@@ -143,13 +151,14 @@ class Logout(LoginRequiredMixin,CreateView):
 @class_view_decorator(never_cache)
 class Secret(OTPRequiredMixin,UserPassesTestMixin,CreateView):
     template_name = "accounts/secret.html"
-
     def test_func(self):
-        # return self.user.email != '' or self.user.email != ' '
-        return True
+        if self.request.user.email != '' or self.request.user.email != '':
+            return True
+        else:
+            return False
 
-    # def get_login_url(self):
-    #     return '/accountInfo/'
+    def get_login_url(self):
+        return '/accountInfo/'
 
     def dispatch(self, *args, **kwargs):
         return super(Secret, self).dispatch(*args, **kwargs)
@@ -161,16 +170,17 @@ class Secret(OTPRequiredMixin,UserPassesTestMixin,CreateView):
         return render(request, self.template_name, context)
 
 class AccountInfo(LoginRequiredMixin,CreateView):
-    template_name = "accounts/email.html"
+    template_name = "accounts/profile_update.html"
 
     def dispatch(self, *args, **kwargs):
         return super(AccountInfo, self).dispatch(*args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         context = {}
+        account_activation_token = TokenGenerator()
         user_id = request.user.id
-        print('user_id',user_id)
         current_user = User.objects.filter(id = user_id)[0]
+
         context['profileForm'] = ProfileForm(instance = current_user)
         return render(request, self.template_name, context)
 
@@ -181,8 +191,6 @@ class AccountInfo(LoginRequiredMixin,CreateView):
         user_id = request.user.id
         current_user = User.objects.filter(id = user_id)[0]
 
-
-        # if form.is_valid():
         user_name = request.POST['user_name']
         old_password = request.POST['old_password']
         # new_password = request.POST['new_password']
@@ -206,17 +214,18 @@ class AccountInfo(LoginRequiredMixin,CreateView):
             response_data['success_msg'] = 'Successfully updated user'
             try:
                 if user.email_confirmed == False:
-                    send_user_email(email)
+                    urltoken = BaseUserManager().make_random_password(15)
+                    user.activation_code = urltoken
+                    user.save()
+
+                    email_link = 'http://34.215.13.107/confirmEmail/'+str(urltoken)+"/"
+                    send_user_email(email_link,email)
             except Exception as e:
                 print("Error sending email, check the email settings are correct")
         else:
             # print('password_confirm !== password')
             response_data['success']     = 'no'
             response_data['success_msg'] = 'password dont match'
-        # else:
-        #     print('form is not valid',form.errors)
-        #     response_data['success']     = 'no'
-        #     response_data['success_msg'] = 'form not valid'
 
         return JsonResponse(response_data)
 
@@ -228,5 +237,17 @@ class ConfirmEmail(LoginRequiredMixin,CreateView):
 
     def get(self, request, *args, **kwargs):
         context = {}
-        email_token = self.kwargs['email_token']
+        token = self.kwargs['token']
+
+        print('token',token)      
+        
+        try:
+            user = User.objects.get(activation_code=token)
+        except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+        if user is not None:
+            user.email_confirmed = True
+            user.save()
+            # login(request, user)
+            # return redirect('home')
         return render(request, self.template_name, context)

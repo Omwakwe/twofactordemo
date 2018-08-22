@@ -10,5 +10,7 @@ urlpatterns = [
     url(r'^login/$', Login.as_view(), name='login'),
     url(r'^secret/$', Secret.as_view(), name='secret'),
     url(r'^accountInfo/$', AccountInfo.as_view(), name='accountInfo'),
+
+    url(r'^confirmEmail/(?P<token>\w+)/$', ConfirmEmail.as_view(), name='confirmEmail'),
     url(r'^logout/$', logout, {'next_page': settings.LOGOUT_REDIRECT_URL}, name='logout')
 ]
