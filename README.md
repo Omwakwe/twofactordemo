@@ -15,4 +15,4 @@ Email sending uses gmail smtp, add your email and password for EMAIL_HOST_USER a
 
 Run the project by executing - python manage.py runserver
 
-A demo project is running at - http://34.215.13.107/
+A demo project for testing is live at - http://34.215.13.107/
