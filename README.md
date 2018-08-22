@@ -3,6 +3,8 @@ Repository for django two factor demonstration
 
 Clone this repository to your machine
 
+Make a virtual environment with Python 3.4 and activate it
+
 Navigate to the base of the project where there is manage.py file
 
 Pip install the dependencies by running pip install -r requirements.txt
