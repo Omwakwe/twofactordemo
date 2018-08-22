@@ -11,6 +11,6 @@ make migrations by executing - python manage.py makemigrations
 
 run migrations by executing - python manage.py migrate
 
-Run the project
+Run the project by executing - python manage.py runserver
 
 A demo project is running at - http://34.215.13.107/
