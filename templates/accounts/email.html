@@ -8,38 +8,59 @@
 </div>
 <div class='col-md-6'>
 <h3>Account info</h3>
-<form method="post" id="signupForm">
+<form method="post" id="profileForm">
 <div class="row">
                <div class="col-md-12">
                   <div class="form-group">
                      <label class="control-label">User Name<span class="required">*</span></label>
-                     {{signupForm.user_name}}
+                     {{profileForm.user_name}}
                   </div>
                </div>
                <!-- /.col -->
                <div class="col-md-12">
                   <div class="form-group">
                      <label class="control-label">Email</label>
-                     {{signupForm.email}}
+                     {{profileForm.email}}
+                  </div>
+               </div>
+               <!-- /.col -->
+               <div class="col-md-12">
+                  <div class="form-group">
+                     <label class="control-label">First Name<span class="required">*</span></label>
+                     {{profileForm.first_name}}
+                  </div>
+               </div>
+               <!-- /.col -->
+               <div class="col-md-12">
+                  <div class="form-group">
+                     <label class="control-label">Second Name</label>
+                     {{profileForm.second_name}}
+                  </div>
+               </div>
+               <!-- /.col -->
+               <div class="col-md-12">
+                  <div class="form-group">
+                     <label class="control-label">Last Name</label>
+                     {{profileForm.last_name}}
                   </div>
                </div>
                <!-- /.col -->
                <div class="col-md-12">
                   <div class="form-group">
                      <label class="control-label">Password <span class="required">*</span></label>
-                     {{signupForm.password}}
+                     {{profileForm.old_password}}
                   </div>
                </div>
                <!-- /.col -->
-               <div class="col-md-12">
+               <!-- <div class="col-md-12">
                   <div class="form-group">
                      <label class="control-label">Password Confirm<span class="required">*</span></label>
-                     {{signupForm.password_confirm}}
+                     {{profileForm.password_confirm}}
                   </div>
-               </div>
+               </div> -->
                <!-- /.col -->
             </div>
-  <input class='btn btn-block btn-primary' id="signup" type="submit" value="Sign Up" />
+  <input class='btn btn-block btn-primary' id="update_profile" type="submit" value="Update" />
 </form>
 </div>
 <div class='col-md-3'>

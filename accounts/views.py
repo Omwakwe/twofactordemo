@@ -6,14 +6,23 @@ from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
+from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib.auth import authenticate, login
 
 from django_otp.decorators import otp_required
 from two_factor.views import OTPRequiredMixin
 from two_factor.views.utils import class_view_decorator
 
-from accounts.forms import SignupForm,LoginForm
+from accounts.forms import SignupForm,LoginForm,ProfileForm
 from accounts.models import User
 
+def send_user_email(recipients='starfordomwakwe@gmail.com'):
+    subject = 'Account activation email'
+    message = ' click on the following link to activate your two factor account '
+    email_from = settings.EMAIL_HOST_USER
+    recipient_list = [recipients,]
+    send_mail( subject, message, email_from, recipient_list )
 
 class Home(CreateView):
     template_name = "accounts/index.html"
@@ -23,6 +32,11 @@ class Home(CreateView):
 
 
     def get(self, request, *args, **kwargs):
+        try:
+            send_user_email()
+        except Exception as e:
+            print("Error sending email, check the email settings are correct")
+        
         users = User.objects.all()
         for user in users:
             print('user is',user.user_name,user.email)
@@ -58,6 +72,7 @@ class Signup(CreateView):
                 print('user_id',new_user.id)
                 response_data['success']     = 'yes'
                 response_data['success_msg'] = 'Successfully signed up'
+                login(request, new_user)
                 # return redirect('/home/')
             else:
                 # print('password_confirm !== password')
@@ -69,7 +84,6 @@ class Signup(CreateView):
             response_data['success_msg'] = 'form not valid'
 
         return JsonResponse(response_data)
-
 
 class Login(CreateView):
     template_name = "accounts/login.html"
@@ -146,7 +160,7 @@ class Secret(OTPRequiredMixin,UserPassesTestMixin,CreateView):
         context['loginForm'] = LoginForm()
         return render(request, self.template_name, context)
 
-class AccountInfo(CreateView):
+class AccountInfo(LoginRequiredMixin,CreateView):
     template_name = "accounts/email.html"
 
     def dispatch(self, *args, **kwargs):
@@ -154,5 +168,65 @@ class AccountInfo(CreateView):
 
     def get(self, request, *args, **kwargs):
         context = {}
-        context['signupForm'] = SignupForm()
+        user_id = request.user.id
+        print('user_id',user_id)
+        current_user = User.objects.filter(id = user_id)[0]
+        context['profileForm'] = ProfileForm(instance = current_user)
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        form = ProfileForm(data=request.POST or None)
+        response_data ={}
+
+        user_id = request.user.id
+        current_user = User.objects.filter(id = user_id)[0]
+
+
+        # if form.is_valid():
+        user_name = request.POST['user_name']
+        old_password = request.POST['old_password']
+        # new_password = request.POST['new_password']
+        email = request.POST['email']
+        first_name = request.POST['first_name']
+        second_name = request.POST['second_name']
+        last_name = request.POST['last_name']
+
+        user = authenticate(request, user_name=user_name, password=old_password)
+
+        if user is not None:
+            # user.set_password(new_password)
+            user.user_name=user_name
+            user.email=email
+            user.first_name=first_name
+            user.second_name=second_name
+            user.last_name=last_name
+            user.save()
+
+            response_data['success']     = 'yes'
+            response_data['success_msg'] = 'Successfully updated user'
+            try:
+                if user.email_confirmed == False:
+                    send_user_email(email)
+            except Exception as e:
+                print("Error sending email, check the email settings are correct")
+        else:
+            # print('password_confirm !== password')
+            response_data['success']     = 'no'
+            response_data['success_msg'] = 'password dont match'
+        # else:
+        #     print('form is not valid',form.errors)
+        #     response_data['success']     = 'no'
+        #     response_data['success_msg'] = 'form not valid'
+
+        return JsonResponse(response_data)
+
+class ConfirmEmail(LoginRequiredMixin,CreateView):
+    template_name = "accounts/email_confirmed.html"
+
+    def dispatch(self, *args, **kwargs):
+        return super(ConfirmEmail, self).dispatch(*args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        context = {}
+        email_token = self.kwargs['email_token']
         return render(request, self.template_name, context)

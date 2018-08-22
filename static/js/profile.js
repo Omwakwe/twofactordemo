@@ -29,17 +29,17 @@ function csrfSafeMethod(method) {
     //     signup_function(); 
     // }));
 
-    $(document).on('submit','#signupForm',(function(e) {
+    $(document).on('submit','#profileForm',(function(e) {
         e.preventDefault();
-        signup_function(); 
+        profile_update_function(); 
     }));
 
-    function signup_function() {
+    function profile_update_function() {
         
-        var formdata = $("#signupForm").serializeArray();
-        console.log("Inside signup_function",formdata);
+        var formdata = $("#profileForm").serializeArray();
+        console.log("Inside profile_update_function",formdata);
         $.ajax({
-            url: "/signup/",
+            url: "/accountInfo/",
             type: "POST",
             data: formdata,
 
