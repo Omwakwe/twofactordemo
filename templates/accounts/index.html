@@ -1,16 +1,16 @@
-{% extends "accounts/base.html" %}
-{% load i18n %}
+{% extends "accounts/base.html" %} {% load i18n %} {% block content %}
+<div class="row">
 
+    <div class="col-md-12">
+        <h3>The home page</h3>
+        <p>Sign up for an account.</p>
+        <p>Go to the profile page and make sure you have an email and update you account info. You will receive an email with link to activate email.</p>
+        <p>After email activation, click on Account link in top righ corner and you will be prompted to activate two factor authentication.</p>
+        <p>You will now have to use two factor authentication to log in.</p>
+    </div>
+    <!-- /.col-lg-9 -->
 
-{% block content %}
-      <div class="row">
-
-        <div class="col-md-12">
-        <h1>The home page</h1>
-        </div>
-        <!-- /.col-lg-9 -->
-
-      </div>
-      <!-- /.row -->
+</div>
+<!-- /.row -->
 
 {% endblock %}

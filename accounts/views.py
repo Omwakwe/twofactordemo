@@ -28,10 +28,6 @@ def send_user_email(email_link,recipients='starfordomwakwe@gmail.com'):
     recipient_list = [recipients,]
     send_mail( subject, message, email_from, recipient_list )
 
-class TokenGenerator(PasswordResetTokenGenerator):
-    def _make_hash_value(self, user, timestamp):
-        return ( str(user.pk) + str(timestamp) + str(user.is_active))
-
 class Home(CreateView):
     template_name = "accounts/index.html"
 
@@ -45,9 +41,9 @@ class Home(CreateView):
         # except Exception as e:
         #     print("Error sending email, check the email settings are correct")
         
-        users = User.objects.all()
-        for user in users:
-            print('user is',user.user_name,user.email)
+        # users = User.objects.all()
+        # for user in users:
+        #     print('user is',user.user_name,user.email)
         return render(request, self.template_name, {})
 
 class Signup(CreateView):
@@ -77,7 +73,7 @@ class Signup(CreateView):
                 new_user.set_password(password)
                 new_user.save()
 
-                print('user_id',new_user.id)
+                # print('user_id',new_user.id)
                 response_data['success']     = 'yes'
                 response_data['success_msg'] = 'Successfully signed up'
                 login(request, new_user)
@@ -101,9 +97,6 @@ class Login(CreateView):
 
 
     def get(self, request, *args, **kwargs):
-        users = User.objects.all()
-        for user in users:
-            print('user is',user.user_name)
         context = {}
         context['loginForm'] = LoginForm()
         return render(request, self.template_name, context)
@@ -118,7 +111,7 @@ class Login(CreateView):
             user = User.objects.get(user_name=user_name)
 
             checked_user = user.check_password(password)
-            print('checked_user is',checked_user)
+            # print('checked_user is',checked_user)
 
             if checked_user:
                 response_data['success']     = 'yes'
@@ -248,6 +241,4 @@ class ConfirmEmail(LoginRequiredMixin,CreateView):
         if user is not None:
             user.email_confirmed = True
             user.save()
-            # login(request, user)
-            # return redirect('home')
         return render(request, self.template_name, context)
