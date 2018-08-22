@@ -170,7 +170,6 @@ class AccountInfo(LoginRequiredMixin,CreateView):
 
     def get(self, request, *args, **kwargs):
         context = {}
-        account_activation_token = TokenGenerator()
         user_id = request.user.id
         current_user = User.objects.filter(id = user_id)[0]
 
